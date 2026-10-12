@@ -1,10 +1,13 @@
 [package]
 name = "fimpp-cli"
-version.workspace = true
-edition.workspace = true
+version = "0.1.0"
+edition = "2024"
 
 [dependencies]
-fimpp-lexer = { workspace = true }
-fimpp-parser = { workspace = true }
-fimpp-ast = { workspace = true }
-fimpp-vm = { workspace = true }
+fimpp-lexer = { path = "../fimpp-lexer" }
+fimpp-ast = { path = "../fimpp-ast" }
+fimpp-parser = { path = "../fimpp-parser" }
+fimpp-codegen = { path = "../fimpp-codegen" }
+fimpp-vm = { path = "../fimpp-vm" }
+chumsky.workspace = true
+logos.workspace = true

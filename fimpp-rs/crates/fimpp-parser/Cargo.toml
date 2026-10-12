@@ -4,3 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+chumsky.workspace = true
+fimpp-lexer = { path = "../fimpp-lexer" }
+fimpp-ast = { path = "../fimpp-ast" }
+logos.workspace = true

@@ -23,5 +23,5 @@ fimpp-codegen = { path = "crates/fimpp-codegen" }
 fimpp-vm = { path = "crates/fimpp-vm" }
 
 logos = "0.15"
-chumsky = "0.10"
+chumsky = "0.9"
 ariadne = "0.5"
