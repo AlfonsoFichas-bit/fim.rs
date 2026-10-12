@@ -1,0 +1,10 @@
+[package]
+name = "fimpp-cli"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+fimpp-lexer = { workspace = true }
+fimpp-parser = { workspace = true }
+fimpp-ast = { workspace = true }
+fimpp-vm = { workspace = true }

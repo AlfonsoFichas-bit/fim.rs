@@ -1,0 +1,27 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/fimpp-cli",
+    "crates/fimpp-lexer",
+    "crates/fimpp-parser",
+    "crates/fimpp-ast",
+    "crates/fimpp-semantics",
+    "crates/fimpp-codegen",
+    "crates/fimpp-vm",
+]
+
+[workspace.package]
+edition = "2024"
+version = "0.1.0"
+
+[workspace.dependencies]
+fimpp-lexer = { path = "crates/fimpp-lexer" }
+fimpp-parser = { path = "crates/fimpp-parser" }
+fimpp-ast = { path = "crates/fimpp-ast" }
+fimpp-semantics = { path = "crates/fimpp-semantics" }
+fimpp-codegen = { path = "crates/fimpp-codegen" }
+fimpp-vm = { path = "crates/fimpp-vm" }
+
+logos = "0.15"
+chumsky = "0.10"
+ariadne = "0.5"
