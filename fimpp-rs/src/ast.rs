@@ -1522,8 +1522,9 @@ pub fn create_value_node(
 
     if temp_ast.length() == 1 {
         if temp_ast.peek().value == "nothing" && options.possible_null_type.is_none() {
+            let t = temp_ast.peek();
             return Ok(DynamicNode::Literal(LiteralNode {
-                node: Node::new(0, 0),
+                node: Node::new(t.start, t.length),
                 variable: DynamicVariable::new_unknown(),
             }));
         }

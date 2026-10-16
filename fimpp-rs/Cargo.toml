@@ -1,5 +1,11 @@
+[package]
+name = "fimpp"
+version = "0.1.0"
+edition = "2021"
+
 [workspace]
 resolver = "2"
+default-members = ["."]
 members = [
     "crates/fimpp-cli",
     "crates/fimpp-lexer",
