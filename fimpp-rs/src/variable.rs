@@ -1,5 +1,8 @@
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fmt;
+use std::rc::Rc;
+
 use crate::lexer::{as_boolean_value, as_character_value};
 use crate::token::TokenType;
 
@@ -130,7 +133,7 @@ pub enum DynamicValue {
     Character(String),
     Number(f64),
     String(String),
-    Dictionary(HashMap<usize, DynamicVariable>),
+    Dictionary(Rc<RefCell<HashMap<usize, DynamicVariable>>>),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -200,7 +203,7 @@ impl DynamicVariable {
 
     pub fn new_dictionary(t: VariableType) -> Self {
         Self {
-            value: DynamicValue::Dictionary(HashMap::new()),
+            value: DynamicValue::Dictionary(Rc::new(RefCell::new(HashMap::new()))),
             value_type: t,
         }
     }
@@ -286,23 +289,37 @@ impl DynamicVariable {
         self.value = DynamicValue::Number(val);
     }
 
-    pub fn get_value_dictionary(&self) -> &HashMap<usize, DynamicVariable> {
+    pub fn get_value_dictionary(&self) -> std::cell::Ref<'_, HashMap<usize, DynamicVariable>> {
         if !self.value_type.is_array() {
             panic!("Called get_value_dictionary on a non-dictionary variable");
         }
         if let DynamicValue::Dictionary(map) = &self.value {
-            map
+            map.borrow()
         } else {
             panic!("Corrupted dictionary variable")
         }
     }
 
-    pub fn get_value_dictionary_mut(&mut self) -> &mut HashMap<usize, DynamicVariable> {
+    pub fn dictionary_len(&self) -> usize {
+        self.get_value_dictionary().len()
+    }
+
+    pub fn dictionary_keys(&self) -> Vec<usize> {
+        let mut keys: Vec<usize> = self.get_value_dictionary().keys().copied().collect();
+        keys.sort_unstable();
+        keys
+    }
+
+    pub fn dictionary_get(&self, index: usize) -> Option<DynamicVariable> {
+        self.get_value_dictionary().get(&index).cloned()
+    }
+
+    pub fn dictionary_set(&self, index: usize, value: DynamicVariable) {
         if !self.value_type.is_array() {
-            panic!("Called get_value_dictionary_mut on a non-dictionary variable");
+            panic!("Called dictionary_set on a non-dictionary variable");
         }
-        if let DynamicValue::Dictionary(map) = &mut self.value {
-            map
+        if let DynamicValue::Dictionary(map) = &self.value {
+            map.borrow_mut().insert(index, value);
         } else {
             panic!("Corrupted dictionary variable")
         }

@@ -9,6 +9,7 @@
       <sourceFolder url="file://$MODULE_DIR$/crates/fimpp-parser/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/fimpp-semantics/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/fimpp-vm/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />
