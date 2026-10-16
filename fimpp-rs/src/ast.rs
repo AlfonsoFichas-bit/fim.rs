@@ -1852,3 +1852,7 @@ pub fn create_expression(
         binary_type,
     }))
 }
+
+#[cfg(test)]
+#[path = "ast_tests.rs"]
+mod tests;

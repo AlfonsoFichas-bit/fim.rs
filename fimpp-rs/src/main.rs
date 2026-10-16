@@ -2,6 +2,7 @@ mod ast;
 mod errors;
 mod interpreter;
 mod lexer;
+mod semantics;
 mod token;
 mod variable;
 
@@ -12,34 +13,55 @@ use std::process::ExitCode;
 fn main() -> ExitCode {
     let args: Vec<String> = env::args().collect();
 
-    if args.iter().any(|a| a == "--version" || a == "-v") {
-        println!("fim (Rust port) {}", env!("CARGO_PKG_VERSION"));
+    // Reproduce la semantica de `flag` de Go: deja de parsear al primer arg
+    // posicional. Los flags pueden ir antes del archivo.
+    let mut pretty = false;
+    let mut print_tokens = false;
+    let mut print_ast = false;
+    let mut check = false;
+    let mut version = false;
+    let mut file: Option<String> = None;
+
+    let mut i = 1;
+    while i < args.len() {
+        match args[i].as_str() {
+            "-version" | "--version" => version = true,
+            "-tokens" | "--tokens" => print_tokens = true,
+            "-pretty" | "--pretty" => pretty = true,
+            "-ast" | "--ast" => print_ast = true,
+            "-check" | "--check" => check = true,
+            s if s.starts_with('-') => {}
+            _ => {
+                file = Some(args[i].clone());
+                break;
+            }
+        }
+        i += 1;
+    }
+
+    if version {
+        println!("{}", env!("CARGO_PKG_VERSION"));
         return ExitCode::SUCCESS;
     }
 
-    let mut print_ast = false;
-    let mut print_tokens = false;
-    let mut file: Option<&String> = None;
+    let Some(path) = file else {
+        return ExitCode::SUCCESS;
+    };
 
-    for arg in &args[1..] {
-        match arg.as_str() {
-            "--ast" => print_ast = true,
-            "--tokens" => print_tokens = true,
-            "--pretty" => {}
-            other if !other.starts_with('-') => file = Some(arg),
-            _ => {}
+    // Go checks that the path is a regular file.
+    match fs::metadata(&path) {
+        Ok(m) if m.is_file() => {}
+        _ => {
+            println!("Invalid file '{}'", &path);
+            return ExitCode::FAILURE;
         }
     }
 
-    let Some(path) = file else {
-        eprintln!("Uso: cargo run -- <ruta_al_archivo.fim> [--ast] [--tokens] [--pretty] [--version]");
-        return ExitCode::FAILURE;
-    };
-
-    let source = match fs::read_to_string(path) {
+    let source = match fs::read_to_string(&path) {
         Ok(source) => source,
         Err(err) => {
-            eprintln!("No se pudo leer el archivo '{}': {}", path, err);
+            println!("An error has occured while trying to load file '{}'", &path);
+            println!("{}", err);
             return ExitCode::FAILURE;
         }
     };
@@ -54,8 +76,8 @@ fn main() -> ExitCode {
     let report = match ast::create_report(&tokens, &source) {
         Ok(report) => report,
         Err(err) => {
-            eprintln!("Spike notó algo inusual en tu reporte...");
-            eprintln!("{}", err);
+            println!("Spike noticed something unusual in your report...");
+            println!("{}", err);
             return ExitCode::FAILURE;
         }
     };
@@ -72,28 +94,38 @@ fn main() -> ExitCode {
     let mut interpreter = match interpreter::Interpreter::new(&report, &source) {
         Ok(interpreter) => interpreter,
         Err(err) => {
-            eprintln!("La Princesa Celestia notó algo inusual en tu reporte...");
-            eprintln!("{}", err);
+            println!("Princess Celestia noticed something unusual in your report...");
+            println!("{}", err);
             return ExitCode::FAILURE;
         }
     };
 
-    if args.iter().any(|a| a == "--pretty") {
+    if check {
+        match semantics::analyze(&report, &source) {
+            Ok(()) => return ExitCode::SUCCESS,
+            Err(err) => {
+                println!("{}", err);
+                return ExitCode::FAILURE;
+            }
+        }
+    }
+
+    if pretty {
         println!("┌─ fim {}", env!("CARGO_PKG_VERSION"));
         println!("├─ Report Name: {}", interpreter.report_title());
         println!("└─ Report Author: {}", interpreter.report_author());
     }
 
     if let Err(err) = interpreter.run() {
-        eprintln!("¡La Princesa Celestia atrapó algo inusual en tu reporte!");
-        eprintln!("{}", err);
+        println!("Princess Celestia caught something unusual in your report!");
+        println!("{}", err);
         return ExitCode::FAILURE;
     }
 
     ExitCode::SUCCESS
 }
 
-/// Port de `luna/aprint` restringido a la tabla de tokens de `main.go`.
+/// Port de la tabla de tokens de `main.go` (luna/aprint).
 fn print_token_table(tokens: &[token::Token]) {
     const COLUMNS: usize = 4;
 
@@ -117,8 +149,6 @@ fn print_token_table(tokens: &[token::Token]) {
         rows.push(row);
     }
 
-    // Delimitadores por columna y alineación: 0 y 2 a la derecha (menos el
-    // ancho de la columna); el resto a la izquierda.
     let delimiters = [" ", " ", " -> "];
     let right_aligned = [true, false, true, false];
 

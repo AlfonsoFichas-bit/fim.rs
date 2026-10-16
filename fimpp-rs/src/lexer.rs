@@ -909,3 +909,7 @@ fn check_while_keyword(t: &VecDeque<Token>) -> usize {
         ],
     )
 }
+
+#[cfg(test)]
+#[path = "lexer_tests.rs"]
+mod tests;
