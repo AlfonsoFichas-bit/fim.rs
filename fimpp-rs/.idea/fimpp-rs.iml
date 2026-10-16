@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="EMPTY_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/crates/fimpp-ast/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/fimpp-cli/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/fimpp-codegen/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/fimpp-lexer/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/fimpp-parser/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/fimpp-semantics/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/fimpp-vm/src" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/target" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+</module>
