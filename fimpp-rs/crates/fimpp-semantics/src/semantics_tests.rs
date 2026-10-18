@@ -1,8 +1,8 @@
 use std::fs;
 
-use crate::ast;
-use crate::lexer;
 use crate::semantics;
+use fimpp_ast::ast;
+use fimpp_lexer::lexer;
 
 fn analyze_source(source: &str) {
     let tokens = lexer::parse(source);
@@ -13,11 +13,14 @@ fn analyze_source(source: &str) {
 fn analyze_error(source: &str) {
     let tokens = lexer::parse(source);
     let report = ast::create_report(&tokens, source).expect("report creation failed");
-    assert!(semantics::analyze(&report, source).is_err(), "expected semantic error");
+    assert!(
+        semantics::analyze(&report, source).is_err(),
+        "expected semantic error"
+    );
 }
 
 fn all_samples_ok() {
-    let entries = fs::read_dir("../fim/samples").expect("samples dir");
+    let entries = fs::read_dir("../../../fim/samples").expect("samples dir");
     for entry in entries {
         let entry = entry.unwrap();
         let path = entry.path();
@@ -26,8 +29,10 @@ fn all_samples_ok() {
         }
         let source = fs::read_to_string(&path).unwrap();
         let tokens = lexer::parse(&source);
-        let report = ast::create_report(&tokens, &source).unwrap_or_else(|e| panic!("parse {} failed: {}", path.display(), e));
-        semantics::analyze(&report, &source).unwrap_or_else(|e| panic!("semantics {} failed: {}", path.display(), e));
+        let report = ast::create_report(&tokens, &source)
+            .unwrap_or_else(|e| panic!("parse {} failed: {}", path.display(), e));
+        semantics::analyze(&report, &source)
+            .unwrap_or_else(|e| panic!("semantics {} failed: {}", path.display(), e));
     }
 }
 

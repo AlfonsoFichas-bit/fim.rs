@@ -9,10 +9,10 @@ use std::cmp::min;
 use std::io::{self, Write};
 use std::rc::Rc;
 
-use crate::ast::*;
-use crate::errors::parse_error;
-use crate::lexer::{as_boolean_value, as_character_value};
-use crate::variable::{DynamicVariable, VariableType};
+use fimpp_ast::ast::*;
+use fimpp_ast::variable::{DynamicVariable, VariableType};
+use fimpp_lexer::lexer::{as_boolean_value, as_character_value};
+use fimpp_semantics::errors::parse_error;
 
 // ============================================================================
 // VARIABLES (celestia/variables.go)
@@ -67,7 +67,10 @@ impl VariableManager {
             if self.scope_depth() == 0 {
                 panic!("VariableManager@PushVariable called with no variable scopes");
             }
-            self.locals.last_mut().unwrap().push(Rc::new(RefCell::new(variable)));
+            self.locals
+                .last_mut()
+                .unwrap()
+                .push(Rc::new(RefCell::new(variable)));
         }
     }
 
@@ -159,7 +162,9 @@ fn default_prompt() -> Box<dyn FnMut(String) -> Result<String, String>> {
         io::stdout().flush().ok();
 
         let mut line = String::new();
-        io::stdin().read_line(&mut line).map_err(|e| e.to_string())?;
+        io::stdin()
+            .read_line(&mut line)
+            .map_err(|e| e.to_string())?;
         if line.ends_with('\n') {
             line.pop();
             if line.ends_with('\r') {
@@ -206,7 +211,11 @@ impl Interpreter {
                 }
 
                 DynamicNode::VariableDeclaration(declaration) => {
-                    if interpreter.variables.get(&declaration.identifier, true).is_some() {
+                    if interpreter
+                        .variables
+                        .get(&declaration.identifier, true)
+                        .is_some()
+                    {
                         return Err(parse_error(
                             &format!("Variable '{}' already exists.", declaration.identifier),
                             &interpreter.source,
@@ -214,8 +223,7 @@ impl Interpreter {
                         ));
                     }
 
-                    let mut value =
-                        interpreter.evaluate_value_node(&declaration.value, false)?;
+                    let mut value = interpreter.evaluate_value_node(&declaration.value, false)?;
 
                     if value.value_type == VariableType::Unknown {
                         if declaration.value_type.is_array() {
@@ -235,11 +243,7 @@ impl Interpreter {
                     }
 
                     interpreter.variables.push_variable(
-                        Variable::new(
-                            declaration.identifier.clone(),
-                            value,
-                            declaration.constant,
-                        ),
+                        Variable::new(declaration.identifier.clone(), value, declaration.constant),
                         true,
                     );
                 }
@@ -249,7 +253,7 @@ impl Interpreter {
                         "Unsupported report body node",
                         &interpreter.source,
                         node.to_node().start,
-                    ))
+                    ));
                 }
             }
         }
@@ -366,7 +370,10 @@ impl Interpreter {
                 let value_type = variable.borrow().value.borrow().value_type;
                 if !value_type.is_array() && value_type != VariableType::String {
                     return Err(parse_error(
-                        &format!("Invalid non-dicionary identifier ({})", identifier.identifier),
+                        &format!(
+                            "Invalid non-dicionary identifier ({})",
+                            identifier.identifier
+                        ),
                         &self.source,
                         identifier.node.start,
                     ));
@@ -431,21 +438,23 @@ impl Interpreter {
                 }
 
                 match expression.operator {
-                    BinaryExpressionOperator::Add => {
-                        Ok(DynamicVariable::new_number(left.get_value_number() + right.get_value_number()))
-                    }
-                    BinaryExpressionOperator::Sub => {
-                        Ok(DynamicVariable::new_number(left.get_value_number() - right.get_value_number()))
-                    }
-                    BinaryExpressionOperator::Mul => {
-                        Ok(DynamicVariable::new_number(left.get_value_number() * right.get_value_number()))
-                    }
-                    BinaryExpressionOperator::Div => {
-                        Ok(DynamicVariable::new_number(left.get_value_number() / right.get_value_number()))
-                    }
+                    BinaryExpressionOperator::Add => Ok(DynamicVariable::new_number(
+                        left.get_value_number() + right.get_value_number(),
+                    )),
+                    BinaryExpressionOperator::Sub => Ok(DynamicVariable::new_number(
+                        left.get_value_number() - right.get_value_number(),
+                    )),
+                    BinaryExpressionOperator::Mul => Ok(DynamicVariable::new_number(
+                        left.get_value_number() * right.get_value_number(),
+                    )),
+                    BinaryExpressionOperator::Div => Ok(DynamicVariable::new_number(
+                        left.get_value_number() / right.get_value_number(),
+                    )),
                     BinaryExpressionOperator::Mod => {
                         // math.Mod(a, b) == a % b para f64
-                        Ok(DynamicVariable::new_number(left.get_value_number() % right.get_value_number()))
+                        Ok(DynamicVariable::new_number(
+                            left.get_value_number() % right.get_value_number(),
+                        ))
                     }
                     BinaryExpressionOperator::And => Ok(DynamicVariable::new_boolean(
                         left.get_value_boolean() && right.get_value_boolean(),
@@ -495,7 +504,8 @@ impl Interpreter {
     ) -> Result<Option<DynamicVariable>, String> {
         let mut new_variable_count = 0usize;
         let result = self.evaluate_statements_inner(statements, &mut new_variable_count);
-        self.variables.pop_variable_amount(false, new_variable_count);
+        self.variables
+            .pop_variable_amount(false, new_variable_count);
         result
     }
 
@@ -623,9 +633,7 @@ impl Interpreter {
                     }
 
                     if node.value_type != value.value_type {
-                        if node.value_type == VariableType::String
-                            && !value.value_type.is_array()
-                        {
+                        if node.value_type == VariableType::String && !value.value_type.is_array() {
                             value = DynamicVariable::new_raw_string(value.get_value_string());
                         } else {
                             return Err(parse_error(
@@ -712,7 +720,9 @@ impl Interpreter {
                         VariableType::Character => {
                             target.set_value_character(value.get_value_character().to_string())
                         }
-                        VariableType::Boolean => target.set_value_boolean(value.get_value_boolean()),
+                        VariableType::Boolean => {
+                            target.set_value_boolean(value.get_value_boolean())
+                        }
                         VariableType::Number => target.set_value_number(value.get_value_number()),
                         _ => {}
                     }
@@ -776,10 +786,7 @@ impl Interpreter {
 
                     if base_type != value.value_type {
                         return Err(parse_error(
-                            &format!(
-                                "Expected type '{}', got '{}'.",
-                                base_type, value.value_type
-                            ),
+                            &format!("Expected type '{}', got '{}'.", base_type, value.value_type),
                             &self.source,
                             node.node.start,
                         ));
@@ -802,7 +809,8 @@ impl Interpreter {
                                 return Err(parse_error(
                                     &format!(
                                         "Expected condition to result in type {}, got {}",
-                                        VariableType::Boolean, branch_check.value_type
+                                        VariableType::Boolean,
+                                        branch_check.value_type
                                     ),
                                     &self.source,
                                     branch.statements.node.start,
@@ -830,7 +838,8 @@ impl Interpreter {
                         return Err(parse_error(
                             &format!(
                                 "Expected condition to result in type {}, got {}",
-                                VariableType::Boolean, branch_check.value_type
+                                VariableType::Boolean,
+                                branch_check.value_type
                             ),
                             &self.source,
                             node.condition_stmt.statements.node.start,
@@ -876,7 +885,8 @@ impl Interpreter {
                             return Err(parse_error(
                                 &format!(
                                     "Expected loop variable to be type {}, got {}",
-                                    VariableType::Character, node.base.variable_type
+                                    VariableType::Character,
+                                    node.base.variable_type
                                 ),
                                 &self.source,
                                 node.base.statements.node.start,
@@ -910,8 +920,7 @@ impl Interpreter {
                                 false,
                             );
 
-                            let result =
-                                self.evaluate_statements_node(&node.base.statements);
+                            let result = self.evaluate_statements_node(&node.base.statements);
                             self.variables.pop_variable(false);
 
                             match result? {
@@ -948,8 +957,7 @@ impl Interpreter {
                                 false,
                             );
 
-                            let result =
-                                self.evaluate_statements_node(&node.base.statements);
+                            let result = self.evaluate_statements_node(&node.base.statements);
                             self.variables.pop_variable(false);
 
                             match result? {
@@ -1111,11 +1119,7 @@ impl Interpreter {
                             current - 1.0
                         });
 
-                        variable
-                            .borrow()
-                            .value
-                            .borrow()
-                            .dictionary_set(key, value);
+                        variable.borrow().value.borrow().dictionary_set(key, value);
                     }
 
                     _ => {}
@@ -1152,7 +1156,7 @@ impl Interpreter {
                         "Unsupported statement node.",
                         &self.source,
                         statement.to_node().start,
-                    ))
+                    ));
                 }
             }
         }

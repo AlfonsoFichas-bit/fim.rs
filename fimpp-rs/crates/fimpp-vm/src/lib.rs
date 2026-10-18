@@ -1,14 +1,8 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+pub mod bytecode;
+pub mod interpreter;
 
 #[cfg(test)]
-mod tests {
-    use super::*;
+mod interpreter_tests;
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+pub use bytecode::*;
+pub use interpreter::*;

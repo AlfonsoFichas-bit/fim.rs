@@ -1,7 +1,9 @@
-use crate::ast::{self, BinaryExpressionOperator, BinaryExpressionType, CreateValueNodeOptions, DynamicNode};
-use crate::lexer;
-use crate::token::TokenType;
+use crate::ast::{
+    self, BinaryExpressionOperator, BinaryExpressionType, CreateValueNodeOptions, DynamicNode,
+};
 use crate::variable::VariableType;
+use fimpp_lexer::lexer;
+use fimpp_lexer::token::TokenType;
 
 #[test]
 fn binary_expression_add() {
@@ -9,10 +11,14 @@ fn binary_expression_add() {
     let tokens = lexer::parse(source);
     // ignore EOF
     let tokens = &tokens[..tokens.len() - 1];
-    let node = ast::create_value_node(tokens, CreateValueNodeOptions {
-        possible_null_type: None,
-        into_array: false,
-    }).expect("create_value_node failed");
+    let node = ast::create_value_node(
+        tokens,
+        CreateValueNodeOptions {
+            possible_null_type: None,
+            into_array: false,
+        },
+    )
+    .expect("create_value_node failed");
 
     match node {
         DynamicNode::BinaryExpression(b) => {
@@ -36,10 +42,14 @@ fn binary_expression_multiple() {
     let source = "1 plus 2 minus 3";
     let tokens = lexer::parse(source);
     let tokens = &tokens[..tokens.len() - 1];
-    let node = ast::create_value_node(tokens, CreateValueNodeOptions {
-        possible_null_type: None,
-        into_array: false,
-    }).expect("create_value_node failed");
+    let node = ast::create_value_node(
+        tokens,
+        CreateValueNodeOptions {
+            possible_null_type: None,
+            into_array: false,
+        },
+    )
+    .expect("create_value_node failed");
 
     match node {
         DynamicNode::BinaryExpression(b) => {
@@ -62,7 +72,7 @@ fn binary_expression_multiple() {
                 _ => panic!("left.right not literal"),
             }
             match &b.right {
-                DynamicNode::Literal(ref r) => {
+                DynamicNode::Literal(r) => {
                     assert_eq!(r.variable.get_value_number(), 3.0);
                 }
                 _ => panic!("right not literal"),
@@ -77,10 +87,14 @@ fn binary_expression_relational() {
     let source = "correct is equal to true";
     let tokens = lexer::parse(source);
     let tokens = &tokens[..tokens.len() - 1];
-    let node = ast::create_value_node(tokens, CreateValueNodeOptions {
-        possible_null_type: None,
-        into_array: false,
-    }).expect("create_value_node failed");
+    let node = ast::create_value_node(
+        tokens,
+        CreateValueNodeOptions {
+            possible_null_type: None,
+            into_array: false,
+        },
+    )
+    .expect("create_value_node failed");
 
     match node {
         DynamicNode::BinaryExpression(b) => {

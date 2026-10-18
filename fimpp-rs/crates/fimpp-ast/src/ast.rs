@@ -1,6 +1,6 @@
-use std::collections::HashMap;
-use crate::token::{Token, TokenType};
 use crate::variable::{DynamicVariable, VariableType};
+use fimpp_lexer::token::{Token, TokenType};
+use std::collections::HashMap;
 
 // ============================================================================
 // BASE NODE & AST CURSOR (spike/node/base.go + spike/ast/ast.go)
@@ -914,9 +914,9 @@ pub fn parse_statements_node(
         }
         if cur_ast.check_type(&[TokenType::ForEveryClause])
             && cur_ast.contains_with_stop(
-            TokenType::KeywordIn,
-            &[TokenType::EndOfFile, TokenType::Punctuation],
-        )
+                TokenType::KeywordIn,
+                &[TokenType::EndOfFile, TokenType::Punctuation],
+            )
         {
             let n = parse_for_every_array_statement_node(cur_ast)?;
             statements.push(DynamicNode::ForEveryArray(n));
@@ -924,13 +924,13 @@ pub fn parse_statements_node(
         }
         if cur_ast.check_type(&[TokenType::ForEveryClause])
             && cur_ast.contains_with_stop(
-            TokenType::KeywordFrom,
-            &[TokenType::EndOfFile, TokenType::Punctuation],
-        )
+                TokenType::KeywordFrom,
+                &[TokenType::EndOfFile, TokenType::Punctuation],
+            )
             && cur_ast.contains_with_stop(
-            TokenType::KeywordTo,
-            &[TokenType::EndOfFile, TokenType::Punctuation],
-        )
+                TokenType::KeywordTo,
+                &[TokenType::EndOfFile, TokenType::Punctuation],
+            )
         {
             let n = parse_for_every_range_statement_node(cur_ast)?;
             statements.push(DynamicNode::ForEveryRange(Box::new(n)));
@@ -1076,7 +1076,8 @@ pub fn parse_for_every_range_statement_node(
         &format!("Expected {}", TokenType::KeywordTo),
     )?;
 
-    let to_tokens = ast.consume_until_token_match(TokenType::Punctuation, "Expected punctuation")?;
+    let to_tokens =
+        ast.consume_until_token_match(TokenType::Punctuation, "Expected punctuation")?;
     let range_end = create_value_node(&to_tokens, CreateValueNodeOptions::default())?;
 
     ast.consume_token(
@@ -1121,7 +1122,12 @@ pub fn parse_if_statements_node(cur_ast: &mut Ast) -> Result<IfStatementNode, St
     )?;
 
     let cond_tokens = cur_ast.consume_until_func_match(
-        |t| matches!(t.token_type, TokenType::Punctuation | TokenType::KeywordThen),
+        |t| {
+            matches!(
+                t.token_type,
+                TokenType::Punctuation | TokenType::KeywordThen
+            )
+        },
         "Expected token for statement condition ending",
     )?;
     let cond_node = create_value_node(&cond_tokens, CreateValueNodeOptions::default())?;
@@ -1147,7 +1153,12 @@ pub fn parse_if_statements_node(cur_ast: &mut Ast) -> Result<IfStatementNode, St
         cur_ast.consume_token(TokenType::ElseClause, "Expected ELSE")?;
 
         let cond_tokens = cur_ast.consume_until_func_match(
-            |t| matches!(t.token_type, TokenType::Punctuation | TokenType::KeywordThen),
+            |t| {
+                matches!(
+                    t.token_type,
+                    TokenType::Punctuation | TokenType::KeywordThen
+                )
+            },
             "Expected token for statement condition ending",
         )?;
 
@@ -1206,7 +1217,12 @@ pub fn parse_while_statement_node(cur_ast: &mut Ast) -> Result<WhileStatementNod
     )?;
 
     let cond_tokens = cur_ast.consume_until_func_match(
-        |t| matches!(t.token_type, TokenType::Punctuation | TokenType::KeywordThen),
+        |t| {
+            matches!(
+                t.token_type,
+                TokenType::Punctuation | TokenType::KeywordThen
+            )
+        },
         "Expected token for statement condition ending",
     )?;
     let cond_node = create_value_node(&cond_tokens, CreateValueNodeOptions::default())?;
@@ -1248,9 +1264,9 @@ pub fn parse_while_statement_node(cur_ast: &mut Ast) -> Result<WhileStatementNod
 pub fn consume_until_punctuation(ast: &mut Ast, is_array: bool) -> Result<Vec<Token>, String> {
     if is_array
         || ast.contains_with_stop(
-        TokenType::FunctionParameter,
-        &[TokenType::EndOfFile, TokenType::Punctuation],
-    )
+            TokenType::FunctionParameter,
+            &[TokenType::EndOfFile, TokenType::Punctuation],
+        )
     {
         ast.consume_until_func_match(
             |t| t.token_type == TokenType::Punctuation && t.value != ",",
@@ -1264,9 +1280,7 @@ pub fn consume_until_punctuation(ast: &mut Ast, is_array: bool) -> Result<Vec<To
     }
 }
 
-pub fn parse_variable_declaration_node(
-    ast: &mut Ast,
-) -> Result<VariableDeclarationNode, String> {
+pub fn parse_variable_declaration_node(ast: &mut Ast) -> Result<VariableDeclarationNode, String> {
     let start_token = ast.consume_token(
         TokenType::Declaration,
         &format!("Expected {}", TokenType::Declaration),
@@ -1822,7 +1836,10 @@ pub fn create_value_node(
     }
 
     let unknown_str: String = tokens.iter().map(|t| t.value.as_str()).collect();
-    Err(format!("Encountered unknown value token: '{}'", unknown_str))
+    Err(format!(
+        "Encountered unknown value token: '{}'",
+        unknown_str
+    ))
 }
 
 pub fn create_expression(

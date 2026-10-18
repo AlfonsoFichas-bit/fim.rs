@@ -185,7 +185,12 @@ pub struct Token {
 }
 
 impl Token {
-    pub fn new(start: usize, length: usize, token_type: TokenType, value: impl Into<String>) -> Self {
+    pub fn new(
+        start: usize,
+        length: usize,
+        token_type: TokenType,
+        value: impl Into<String>,
+    ) -> Self {
         Self {
             start,
             length,

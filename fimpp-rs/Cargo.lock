@@ -3,12 +3,11 @@
 version = 4
 
 [[package]]
-name = "fimpp"
-version = "0.1.0"
-
-[[package]]
 name = "fimpp-ast"
 version = "0.1.0"
+dependencies = [
+ "fimpp-lexer",
+]
 
 [[package]]
 name = "fimpp-cli"
@@ -17,6 +16,7 @@ dependencies = [
  "fimpp-ast",
  "fimpp-lexer",
  "fimpp-parser",
+ "fimpp-semantics",
  "fimpp-vm",
 ]
 
@@ -35,7 +35,16 @@ version = "0.1.0"
 [[package]]
 name = "fimpp-semantics"
 version = "0.1.0"
+dependencies = [
+ "fimpp-ast",
+ "fimpp-lexer",
+]
 
 [[package]]
 name = "fimpp-vm"
 version = "0.1.0"
+dependencies = [
+ "fimpp-ast",
+ "fimpp-lexer",
+ "fimpp-semantics",
+]

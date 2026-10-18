@@ -24,8 +24,8 @@ impl Write for SharedWriter {
 }
 
 fn execute(source: &str, prompt: Option<&str>) -> Result<String, String> {
-    let tokens = crate::lexer::parse(source);
-    let report = crate::ast::create_report(&tokens, source)?;
+    let tokens = fimpp_lexer::lexer::parse(source);
+    let report = fimpp_ast::ast::create_report(&tokens, source)?;
     let mut interpreter = Interpreter::new(&report, source)?;
 
     let buffer = Rc::new(RefCell::new(Vec::new()));
@@ -58,7 +58,10 @@ fn expect_prompt(source: &str, prompt: &str, expected: &str) {
 
 fn expect_error(source: &str) {
     match execute(source, None) {
-        Ok(output) => panic!("se esperaba un error, salida: {:?}\nfuente:\n{}", output, source),
+        Ok(output) => panic!(
+            "se esperaba un error, salida: {:?}\nfuente:\n{}",
+            output, source
+        ),
         Err(_) => {}
     }
 }

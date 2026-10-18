@@ -16,8 +16,8 @@
 
 use std::collections::HashMap;
 
-use crate::ast::*;
-use crate::variable::VariableType;
+use fimpp_ast::ast::*;
+use fimpp_ast::variable::VariableType;
 
 // ----------------------------------------------------------------------------
 // Signatura de un párrafo.
@@ -50,7 +50,9 @@ struct Scope {
 }
 impl Scope {
     fn new() -> Self {
-        Self { vars: HashMap::new() }
+        Self {
+            vars: HashMap::new(),
+        }
     }
     fn declare(&mut self, name: String, value_type: VariableType) {
         self.vars.insert(name, value_type);
@@ -99,9 +101,13 @@ impl SemanticAnalyzer {
                 }
                 DynamicNode::VariableDeclaration(declaration) => {
                     if analyzer.globals.contains_key(&declaration.identifier)
-                        || analyzer.lookup_local(&declaration.identifier) {
+                        || analyzer.lookup_local(&declaration.identifier)
+                    {
                         return Err(SemanticError {
-                            message: format!("Variable '{}' already exists.", declaration.identifier),
+                            message: format!(
+                                "Variable '{}' already exists.",
+                                declaration.identifier
+                            ),
                             index: declaration.node.start,
                         });
                     }
@@ -115,8 +121,7 @@ impl SemanticAnalyzer {
                         resolved = declaration.value_type;
                     }
                     if declaration.value_type != resolved
-                        && (declaration.value_type != VariableType::String
-                            || resolved.is_array())
+                        && (declaration.value_type != VariableType::String || resolved.is_array())
                     {
                         return Err(SemanticError {
                             message: format!(
@@ -130,7 +135,9 @@ impl SemanticAnalyzer {
                     analyzer.scopes[0]
                         .vars
                         .insert(declaration.identifier.clone(), declaration.value_type);
-                    analyzer.globals.insert(declaration.identifier.clone(), declaration.value_type);
+                    analyzer
+                        .globals
+                        .insert(declaration.identifier.clone(), declaration.value_type);
                 }
                 _ => {
                     return Err(SemanticError {
@@ -166,7 +173,12 @@ impl SemanticAnalyzer {
     fn pop_scope(&mut self) {
         self.scopes.pop();
     }
-    fn define(&mut self, name: String, value_type: VariableType, index: usize) -> Result<(), SemanticError> {
+    fn define(
+        &mut self,
+        name: String,
+        value_type: VariableType,
+        index: usize,
+    ) -> Result<(), SemanticError> {
         // Rechazar redeclaración en el mismo ámbito actual.
         let current = self.scopes.last_mut().unwrap();
         if current.lookup(&name).is_some() {
@@ -251,10 +263,11 @@ impl SemanticAnalyzer {
                 }
                 DynamicNode::Prompt(node) => {
                     // Variable existente, no constante ni array.
-                    let value_type = self.lookup(&node.identifier).ok_or_else(|| SemanticError {
-                        message: format!("Variable '{}' does not exist.", node.identifier),
-                        index: node.node.start,
-                    })?;
+                    let value_type =
+                        self.lookup(&node.identifier).ok_or_else(|| SemanticError {
+                            message: format!("Variable '{}' does not exist.", node.identifier),
+                            index: node.node.start,
+                        })?;
                     if value_type.is_array() {
                         return Err(SemanticError {
                             message: "Expected variable to be of non-array type".to_string(),
@@ -279,8 +292,7 @@ impl SemanticAnalyzer {
                         resolved = node.value_type;
                     }
                     if node.value_type != resolved
-                        && (node.value_type != VariableType::String
-                            || resolved.is_array())
+                        && (node.value_type != VariableType::String || resolved.is_array())
                     {
                         return Err(SemanticError {
                             message: format!(
@@ -290,16 +302,11 @@ impl SemanticAnalyzer {
                             index: node.node.start,
                         });
                     }
-                    self.define(
-                        node.identifier.clone(),
-                        node.value_type,
-                        node.node.start,
-                    )?;
+                    self.define(node.identifier.clone(), node.value_type, node.node.start)?;
                 }
                 DynamicNode::VariableModify(node) => {
-                    let value_type = self
-                        .lookup(&node.identifier)
-                        .ok_or_else(|| SemanticError {
+                    let value_type =
+                        self.lookup(&node.identifier).ok_or_else(|| SemanticError {
                             message: format!("Variable '{}' does not exist.", node.identifier),
                             index: node.node.start,
                         })?;
@@ -327,23 +334,20 @@ impl SemanticAnalyzer {
                         resolved = value_type;
                     }
                     if resolved != value_type
-                        && (value_type != VariableType::String
-                            || resolved.is_array())
+                        && (value_type != VariableType::String || resolved.is_array())
                     {
                         return Err(SemanticError {
-                            message: format!(
-                                "Expected type '{}', got '{}'.",
-                                value_type, value
-                            ),
+                            message: format!("Expected type '{}', got '{}'.", value_type, value),
                             index: node.node.start,
                         });
                     }
                 }
                 DynamicNode::ArrayModify(node) => {
-                    let value_type = self.lookup(&node.identifier).ok_or_else(|| SemanticError {
-                        message: format!("Variable '{}' does not exist.", node.identifier),
-                        index: node.node.start,
-                    })?;
+                    let value_type =
+                        self.lookup(&node.identifier).ok_or_else(|| SemanticError {
+                            message: format!("Variable '{}' does not exist.", node.identifier),
+                            index: node.node.start,
+                        })?;
                     if !value_type.is_array() {
                         return Err(SemanticError {
                             message: "Invalid non-array variable.".to_string(),
@@ -365,10 +369,7 @@ impl SemanticAnalyzer {
                     let index_type = self.type_of_value(&node.index)?;
                     if index_type != VariableType::Number {
                         return Err(SemanticError {
-                            message: format!(
-                                "Expected a numeric index, got type {}",
-                                index_type
-                            ),
+                            message: format!("Expected a numeric index, got type {}", index_type),
                             index: node.node.start,
                         });
                     }
@@ -385,10 +386,7 @@ impl SemanticAnalyzer {
                     }
                     if base_type != resolved {
                         return Err(SemanticError {
-                            message: format!(
-                                "Expected type '{}', got '{}'.",
-                                base_type, value
-                            ),
+                            message: format!("Expected type '{}', got '{}'.", base_type, value),
                             index: node.node.start,
                         });
                     }
@@ -401,7 +399,8 @@ impl SemanticAnalyzer {
                                 return Err(SemanticError {
                                     message: format!(
                                         "Expected condition to result in type {}, got {}",
-                                        VariableType::Boolean, branch_type
+                                        VariableType::Boolean,
+                                        branch_type
                                     ),
                                     index: node.node.start,
                                 });
@@ -420,20 +419,21 @@ impl SemanticAnalyzer {
                 }
                 DynamicNode::WhileStatement(node) => {
                     // La condición puede ser un statements-node con condición.
-                    let condition = node
-                        .condition_stmt
-                        .condition
-                        .as_ref()
-                        .ok_or_else(|| SemanticError {
-                            message: "Missing while condition".to_string(),
-                            index: node.condition_stmt.statements.node.start,
-                        })?;
+                    let condition =
+                        node.condition_stmt
+                            .condition
+                            .as_ref()
+                            .ok_or_else(|| SemanticError {
+                                message: "Missing while condition".to_string(),
+                                index: node.condition_stmt.statements.node.start,
+                            })?;
                     let condition_type = self.type_of_value(condition)?;
                     if condition_type != VariableType::Boolean {
                         return Err(SemanticError {
                             message: format!(
                                 "Expected condition to result in type {}, got {}",
-                                VariableType::Boolean, condition_type
+                                VariableType::Boolean,
+                                condition_type
                             ),
                             index: node.condition_stmt.statements.node.start,
                         });
@@ -446,10 +446,11 @@ impl SemanticAnalyzer {
                     self.pop_scope();
                 }
                 DynamicNode::ForEveryArray(node) => {
-                    let value_type = self.lookup(&node.identifier).ok_or_else(|| SemanticError {
-                        message: format!("Variable '{}' does not exist.", node.identifier),
-                        index: node.base.statements.node.start,
-                    })?;
+                    let value_type =
+                        self.lookup(&node.identifier).ok_or_else(|| SemanticError {
+                            message: format!("Variable '{}' does not exist.", node.identifier),
+                            index: node.base.statements.node.start,
+                        })?;
                     if value_type.is_array() {
                         if value_type.as_base_type() != node.base.variable_type {
                             return Err(SemanticError {
@@ -474,10 +475,7 @@ impl SemanticAnalyzer {
                         }
                     } else {
                         return Err(SemanticError {
-                            message: format!(
-                                "Expected an array variable, got type {}",
-                                value_type
-                            ),
+                            message: format!("Expected an array variable, got type {}", value_type),
                             index: node.base.statements.node.start,
                         });
                     }
@@ -554,11 +552,10 @@ impl SemanticAnalyzer {
                     }
                     self.pop_scope();
                 }
-                DynamicNode::UnaryExpression(node) => {
-                    match &node.identifier {
-                        DynamicNode::Identifier(identifier) => {
-                            let value_type = self
-                                .lookup(&identifier.identifier)
+                DynamicNode::UnaryExpression(node) => match &node.identifier {
+                    DynamicNode::Identifier(identifier) => {
+                        let value_type =
+                            self.lookup(&identifier.identifier)
                                 .ok_or_else(|| SemanticError {
                                     message: format!(
                                         "Variable '{}' does not exist.",
@@ -566,48 +563,45 @@ impl SemanticAnalyzer {
                                     ),
                                     index: node.node.start,
                                 })?;
-                            if value_type != VariableType::Number {
-                                return Err(SemanticError {
-                                    message: format!(
-                                        "Expected a number type, got {}.",
-                                        value_type
-                                    ),
-                                    index: node.node.start,
-                                });
-                            }
+                        if value_type != VariableType::Number {
+                            return Err(SemanticError {
+                                message: format!("Expected a number type, got {}.", value_type),
+                                index: node.node.start,
+                            });
                         }
-                        DynamicNode::DictionaryIdentifier(identifier) => {
-                            let value_type =
-                                self.lookup(&identifier.identifier).ok_or_else(|| SemanticError {
+                    }
+                    DynamicNode::DictionaryIdentifier(identifier) => {
+                        let value_type =
+                            self.lookup(&identifier.identifier)
+                                .ok_or_else(|| SemanticError {
                                     message: format!(
                                         "Variable '{}' does not exist.",
                                         identifier.identifier
                                     ),
                                     index: node.node.start,
                                 })?;
-                            if value_type != VariableType::NumberArray {
-                                return Err(SemanticError {
-                                    message: format!(
-                                        "Expected a number array type for identifier, got {}.",
-                                        value_type
-                                    ),
-                                    index: node.node.start,
-                                });
-                            }
-                            let index_type = self.type_of_value(&identifier.index)?;
-                            if index_type != VariableType::Number {
-                                return Err(SemanticError {
-                                    message: format!(
-                                        "Expected a number type for index, got {}.",
-                                        index_type
-                                    ),
-                                    index: node.node.start,
-                                });
-                            }
+                        if value_type != VariableType::NumberArray {
+                            return Err(SemanticError {
+                                message: format!(
+                                    "Expected a number array type for identifier, got {}.",
+                                    value_type
+                                ),
+                                index: node.node.start,
+                            });
                         }
-                        _ => {}
+                        let index_type = self.type_of_value(&identifier.index)?;
+                        if index_type != VariableType::Number {
+                            return Err(SemanticError {
+                                message: format!(
+                                    "Expected a number type for index, got {}.",
+                                    index_type
+                                ),
+                                index: node.node.start,
+                            });
+                        }
                     }
-                }
+                    _ => {}
+                },
                 DynamicNode::FunctionCall(call) => {
                     let signature = self
                         .paragraphs
@@ -713,12 +707,12 @@ impl SemanticAnalyzer {
                 Ok(signature.return_type)
             }
             DynamicNode::DictionaryIdentifier(identifier) => {
-                let value_type = self.lookup(&identifier.identifier).ok_or_else(|| {
-                    SemanticError {
-                        message: format!("Unknown identifier ({})", identifier.identifier),
-                        index: identifier.node.start,
-                    }
-                })?;
+                let value_type =
+                    self.lookup(&identifier.identifier)
+                        .ok_or_else(|| SemanticError {
+                            message: format!("Unknown identifier ({})", identifier.identifier),
+                            index: identifier.node.start,
+                        })?;
                 if !value_type.is_array() && value_type != VariableType::String {
                     return Err(SemanticError {
                         message: format!(
@@ -748,21 +742,14 @@ impl SemanticAnalyzer {
                     BinaryExpressionOperator::Add => {
                         if left == VariableType::String || right == VariableType::String {
                             Ok(VariableType::String)
-                        } else if left == VariableType::Number
-                            && right == VariableType::Number
-                        {
+                        } else if left == VariableType::Number && right == VariableType::Number {
                             Ok(VariableType::Number)
-                        } else if left == VariableType::Unknown
-                            || right == VariableType::Unknown
-                        {
+                        } else if left == VariableType::Unknown || right == VariableType::Unknown {
                             // Se resuelve por conversión en tiempo de ejecución.
                             Ok(VariableType::Unknown)
                         } else {
                             Err(SemanticError {
-                                message: format!(
-                                    "Cannot add {:?} and {:?}",
-                                    left, right
-                                ),
+                                message: format!("Cannot add {:?} and {:?}", left, right),
                                 index: expression.node.start,
                             })
                         }
@@ -806,22 +793,23 @@ impl SemanticAnalyzer {
                     BinaryExpressionOperator::Eq | BinaryExpressionOperator::Neq => {
                         Ok(VariableType::Boolean)
                     }
-                    BinaryExpressionOperator::Unknown => {
-                        Err(SemanticError {
-                            message: "Unsupported binary expression operator".to_string(),
-                            index: expression.node.start,
-                        })
-                    }
+                    BinaryExpressionOperator::Unknown => Err(SemanticError {
+                        message: "Unsupported binary expression operator".to_string(),
+                        index: expression.node.start,
+                    }),
                 }
             }
             DynamicNode::UnaryExpression(node) => match &node.identifier {
                 DynamicNode::Identifier(identifier) => {
-                    let value_type = self.lookup(&identifier.identifier).ok_or_else(|| {
-                        SemanticError {
-                            message: format!("Variable '{}' does not exist.", identifier.identifier),
-                            index: node.node.start,
-                        }
-                    })?;
+                    let value_type =
+                        self.lookup(&identifier.identifier)
+                            .ok_or_else(|| SemanticError {
+                                message: format!(
+                                    "Variable '{}' does not exist.",
+                                    identifier.identifier
+                                ),
+                                index: node.node.start,
+                            })?;
                     if value_type != VariableType::Number {
                         return Err(SemanticError {
                             message: format!("Expected a number type, got {}.", value_type),
@@ -831,12 +819,15 @@ impl SemanticAnalyzer {
                     Ok(VariableType::Number)
                 }
                 DynamicNode::DictionaryIdentifier(identifier) => {
-                    let value_type = self
-                        .lookup(&identifier.identifier)
-                        .ok_or_else(|| SemanticError {
-                            message: format!("Variable '{}' does not exist.", identifier.identifier),
-                            index: node.node.start,
-                        })?;
+                    let value_type =
+                        self.lookup(&identifier.identifier)
+                            .ok_or_else(|| SemanticError {
+                                message: format!(
+                                    "Variable '{}' does not exist.",
+                                    identifier.identifier
+                                ),
+                                index: node.node.start,
+                            })?;
                     if value_type != VariableType::NumberArray {
                         return Err(SemanticError {
                             message: format!(

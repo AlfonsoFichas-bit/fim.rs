@@ -33,7 +33,11 @@ pub fn parse_error(message: &str, source: &str, index: usize) -> String {
     let indent = origin.line_content.len() - trimmed.len();
 
     let pad = origin.column as isize - 1 - indent as isize;
-    let pad = if pad > 0 { " ".repeat(pad as usize) } else { String::new() };
+    let pad = if pad > 0 {
+        " ".repeat(pad as usize)
+    } else {
+        String::new()
+    };
 
     format!(
         "[line {}:{}] {}\n{}\n{}^",

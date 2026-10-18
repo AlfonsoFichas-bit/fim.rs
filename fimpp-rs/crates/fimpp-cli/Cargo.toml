@@ -4,6 +4,7 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
+fimpp-semantics = { workspace = true }
 fimpp-lexer = { workspace = true }
 fimpp-parser = { workspace = true }
 fimpp-ast = { workspace = true }

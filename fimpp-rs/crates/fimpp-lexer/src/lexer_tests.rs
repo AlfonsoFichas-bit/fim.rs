@@ -2,12 +2,18 @@ use std::collections::VecDeque;
 
 use crate::token::TokenType;
 
-use super::{create_partial_tokens, is_string_number, merge_partial_tokens, merge_tokens, parse};
+use crate::lexer::{
+    create_partial_tokens, is_string_number, merge_partial_tokens, merge_tokens, parse,
+};
 
 fn check_tokens(tokens: &[crate::token::Token], checks: &[(TokenType, &str)]) {
     assert_eq!(checks.len(), tokens.len(), "Mismatch token count");
     for (idx, (tt, val)) in checks.iter().enumerate() {
-        assert_eq!(tt, &tokens[idx].token_type, "token type mismatch at {}", idx);
+        assert_eq!(
+            tt, &tokens[idx].token_type,
+            "token type mismatch at {}",
+            idx
+        );
         assert_eq!(val, &tokens[idx].value, "token value mismatch at {}", idx);
     }
 }
@@ -87,8 +93,8 @@ fn utilities_is_string_number() {
 #[test]
 fn splittable_runes() {
     // SPLITTABLE_CHARS contains ' '
-    assert!(super::SPLITTABLE_CHARS.contains(&' '));
-    assert!(!super::SPLITTABLE_CHARS.contains(&'a'));
+    assert!(crate::lexer::SPLITTABLE_CHARS.contains(&' '));
+    assert!(!crate::lexer::SPLITTABLE_CHARS.contains(&'a'));
 }
 
 #[test]

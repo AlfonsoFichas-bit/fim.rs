@@ -1,7 +1,7 @@
-use std::collections::VecDeque;
 use crate::token::{Token, TokenType};
+use std::collections::VecDeque;
 
-const SPLITTABLE_CHARS: [char; 13] = [
+pub const SPLITTABLE_CHARS: [char; 13] = [
     '.', '!', '?', ':', ',', '(', ')', '"', '\'', ' ', '\t', '\\', '\n',
 ];
 
@@ -49,7 +49,7 @@ pub fn as_character_value(s: &str) -> Option<String> {
     None
 }
 
-fn is_string_number(value: &str) -> bool {
+pub fn is_string_number(value: &str) -> bool {
     if value.is_empty() {
         return false;
     }
@@ -76,7 +76,7 @@ fn is_indent_string(s: &str) -> bool {
     s == " " || s == "\t"
 }
 
-fn merge_tokens(q: &mut VecDeque<Token>, mut amount: usize) -> Option<Token> {
+pub fn merge_tokens(q: &mut VecDeque<Token>, mut amount: usize) -> Option<Token> {
     let mut first = q.pop_front()?;
     amount = amount.saturating_sub(1);
 
@@ -107,7 +107,7 @@ fn check_token_sequence(tokens: &VecDeque<Token>, sequence: &[&str]) -> bool {
 // PARTIAL LEXER (twilight/partial_lexer.go)
 // ============================================================================
 
-fn create_partial_tokens(source: &str) -> VecDeque<Token> {
+pub fn create_partial_tokens(source: &str) -> VecDeque<Token> {
     let mut l = VecDeque::new();
     let mut start = 0;
 
@@ -148,7 +148,7 @@ fn create_partial_tokens(source: &str) -> VecDeque<Token> {
     l
 }
 
-fn merge_partial_tokens(mut tokens: VecDeque<Token>) -> VecDeque<Token> {
+pub fn merge_partial_tokens(mut tokens: VecDeque<Token>) -> VecDeque<Token> {
     let mut l = VecDeque::new();
     let processors: [fn(&VecDeque<Token>) -> usize; 4] = [
         check_decimal_tokens,
@@ -277,7 +277,12 @@ fn create_tokens(mut partial_tokens: VecDeque<Token>) -> VecDeque<Token> {
     while let Some(mut t) = partial_tokens.pop_front() {
         t.token_type = TokenType::Identifier;
 
-        if t.length == 1 && t.value.chars().next().is_some_and(|c| PUNCTUATIONS.contains(&c)) {
+        if t.length == 1
+            && t.value
+                .chars()
+                .next()
+                .is_some_and(|c| PUNCTUATIONS.contains(&c))
+        {
             t.token_type = TokenType::Punctuation;
         } else if t.length == 1 && t.value == "\n" {
             t.token_type = TokenType::NewLine;
@@ -357,10 +362,22 @@ fn merge_multi_tokens(mut old_tokens: VecDeque<Token>) -> VecDeque<Token> {
         (check_less_than_operator, TokenType::OperatorLt),
         (check_not_equal_operator, TokenType::OperatorNeq),
         (check_equal_operator, TokenType::OperatorEq),
-        (check_unary_prefix_increment, TokenType::UnaryIncrementPrefix),
-        (check_unary_postfix_increment, TokenType::UnaryIncrementPostfix),
-        (check_unary_prefix_decrement, TokenType::UnaryDecrementPrefix),
-        (check_unary_postfix_decrement, TokenType::UnaryDecrementPostfix),
+        (
+            check_unary_prefix_increment,
+            TokenType::UnaryIncrementPrefix,
+        ),
+        (
+            check_unary_postfix_increment,
+            TokenType::UnaryIncrementPostfix,
+        ),
+        (
+            check_unary_prefix_decrement,
+            TokenType::UnaryDecrementPrefix,
+        ),
+        (
+            check_unary_postfix_decrement,
+            TokenType::UnaryDecrementPostfix,
+        ),
         (check_return_keyword, TokenType::KeywordReturn),
         (check_constant_keyword, TokenType::KeywordConst),
         (check_then_keyword, TokenType::KeywordThen),
@@ -555,7 +572,11 @@ fn check_infix_subtraction(t: &VecDeque<Token>) -> usize {
     check_single_or_multi(t, &["minus", "without"], &[])
 }
 fn check_prefix_subtraction(t: &VecDeque<Token>) -> usize {
-    check_single_or_multi(t, &["subtract"], &[&["the", " ", "difference", " ", "between"]])
+    check_single_or_multi(
+        t,
+        &["subtract"],
+        &[&["the", " ", "difference", " ", "between"]],
+    )
 }
 fn check_infix_multiplication(t: &VecDeque<Token>) -> usize {
     check_single_or_multi(t, &["times"], &[&["multiplied", " ", "with"]])
@@ -685,7 +706,11 @@ fn check_equal_operator(t: &VecDeque<Token>) -> usize {
     if multi > 0 {
         return multi;
     }
-    check_single_or_multi(t, &["is", "was", "were", "had", "has", "likes", "like"], &[])
+    check_single_or_multi(
+        t,
+        &["is", "was", "were", "had", "has", "likes", "like"],
+        &[],
+    )
 }
 
 // Unary
@@ -838,7 +863,14 @@ fn check_character_type(t: &VecDeque<Token>) -> usize {
 fn check_string_type(t: &VecDeque<Token>) -> usize {
     check_single_or_multi(
         t,
-        &["characters", "letters", "phrase", "quote", "sentence", "word"],
+        &[
+            "characters",
+            "letters",
+            "phrase",
+            "quote",
+            "sentence",
+            "word",
+        ],
         &[
             &["a", " ", "phrase"],
             &["a", " ", "quote"],
@@ -897,7 +929,9 @@ fn check_else_keyword(t: &VecDeque<Token>) -> usize {
 fn check_if_end_keyword(t: &VecDeque<Token>) -> usize {
     check_any_sequence(
         t,
-        &[&["That", "'", "s", " ", "what", " ", "I", " ", "would", " ", "do"]],
+        &[&[
+            "That", "'", "s", " ", "what", " ", "I", " ", "would", " ", "do",
+        ]],
     )
 }
 fn check_while_keyword(t: &VecDeque<Token>) -> usize {
@@ -905,7 +939,9 @@ fn check_while_keyword(t: &VecDeque<Token>) -> usize {
         t,
         &[
             &["As", " ", "long", " ", "as"],
-            &["Here", "'", "s", " ", "what", " ", "I", " ", "did", " ", "while"],
+            &[
+                "Here", "'", "s", " ", "what", " ", "I", " ", "did", " ", "while",
+            ],
         ],
     )
 }

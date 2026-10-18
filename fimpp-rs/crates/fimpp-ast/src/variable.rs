@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use std::fmt;
 use std::rc::Rc;
 
-use crate::lexer::{as_boolean_value, as_character_value};
-use crate::token::TokenType;
+use fimpp_lexer::lexer::{as_boolean_value, as_character_value};
+use fimpp_lexer::token::TokenType;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum VariableType {
@@ -220,7 +220,11 @@ impl DynamicVariable {
             (VariableType::String, DynamicValue::String(s)) => s.clone(),
             (VariableType::Character, DynamicValue::Character(c)) => c.clone(),
             (VariableType::Boolean, DynamicValue::Boolean(b)) => {
-                if *b { "true".to_string() } else { "false".to_string() }
+                if *b {
+                    "true".to_string()
+                } else {
+                    "false".to_string()
+                }
             }
             (VariableType::Number, DynamicValue::Number(n)) => {
                 if *n == 0.0 {
@@ -238,7 +242,9 @@ impl DynamicVariable {
     }
 
     pub fn get_value_character(&self) -> &str {
-        if let (VariableType::Character, DynamicValue::Character(c)) = (&self.value_type, &self.value) {
+        if let (VariableType::Character, DynamicValue::Character(c)) =
+            (&self.value_type, &self.value)
+        {
             c
         } else {
             panic!("Called get_value_character on a non-character variable")

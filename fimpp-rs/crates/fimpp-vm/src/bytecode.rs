@@ -73,12 +73,12 @@ pub enum Op {
     /// Empuja el resultado de `N of X` (idx se toma de la pila).
     GetArraySlot {
         global_slot: usize,
-        base_type: crate::variable::VariableType,
+        base_type: fimpp_ast::variable::VariableType,
     },
     /// Guarda `value` (tope) en `idx`-ésima posición de `X` (idx tope-1).
     SetArraySlot {
         global_slot: usize,
-        value_type: crate::variable::VariableType,
+        value_type: fimpp_ast::variable::VariableType,
     },
 
     /// Salto incondicional relativo (+1 adelante del siguiente ip).
